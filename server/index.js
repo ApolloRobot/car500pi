@@ -41,40 +41,40 @@ init()
 
 var mqtt=require('mqtt')
 
-const MIDDLEWARES = ['database', 'general', 'router', 'parcel']
+// const MIDDLEWARES = ['database', 'general', 'router', 'parcel']
 const iccidlocal = path.resolve(__dirname, '../', 'config/iccidlocal.txt')
 var iccid=fs.readFileSync(iccidlocal)
 var iccidstr=iccid.toString()
 console.log('iccid--->>>',iccid.toString())
 
-const useMiddlewares = (app) => {
-  R.map(
-    R.compose(
-      R.forEachObjIndexed(
-        e => e(app)
-      ),
-      require,
-      name => resolve(__dirname, `./middleware/${name}`)
-    )
-  )(MIDDLEWARES)
-}
+// const useMiddlewares = (app) => {
+//   R.map(
+//     R.compose(
+//       R.forEachObjIndexed(
+//         e => e(app)
+//       ),
+//       require,
+//       name => resolve(__dirname, `./middleware/${name}`)
+//     )
+//   )(MIDDLEWARES)
+// }
 
-async function start () {
-  const app = new Koa()
-  const { port } = config
+// async function start () {
+//   const app = new Koa()
+//   const { port } = config
 
-  await useMiddlewares(app)
+//   await useMiddlewares(app)
 
-  const server = app.listen(port, () => {
-    console.log(
-      process.env.NODE_ENV === 'development'
-        ? `Open ${chalk.green('http://localhost:' + port)}`
-        : `App listening on port ${port}`
-    )
-  })
-}
+//   const server = app.listen(port, () => {
+//     console.log(
+//       process.env.NODE_ENV === 'development'
+//         ? `Open ${chalk.green('http://localhost:' + port)}`
+//         : `App listening on port ${port}`
+//     )
+//   })
+// }
 
-start()
+// start()
 // const clientId = `mqtt_${Math.random().toString(16).slice(3)}`
 var clientId = `g500_${iccidstr}`
 var client = mqtt.connect(
@@ -116,16 +116,6 @@ client.on('connect', function () {
  
   client.subscribe(`/car_${iccidstr}`)
   client.publish(`/g500_${iccidstr}`,'connect--已连接')
-
- 
-  // setInterval(
- 
-  //  ()=>{client.publish('/temperature', '30');},
- 
-  //  3000
- 
-  // );
-
 
 
  
@@ -221,5 +211,8 @@ if(message.toString()=='one'||message.toString()=='half'||message.toString()=='h
 
 client.on('close', function () {
   console.log('mqtt--Disconnected')
+  in1.digitalWrite(1)
+  in2.digitalWrite(1)
+  in3.digitalWrite(0)
   client.publish(`/g500_${iccidstr}`,'Disconnected--失去连接')
 })
