@@ -45,6 +45,7 @@ var mqtt=require('mqtt')
 const iccidlocal = path.resolve(__dirname, '../', 'config/iccidlocal.txt')
 var iccid=fs.readFileSync(iccidlocal)
 var iccidstr=iccid.toString()
+iccidstr=iccidstr.replace(/[\r\n]/g,"")
 console.log('iccid--->>>',iccid.toString())
 
 // const useMiddlewares = (app) => {
