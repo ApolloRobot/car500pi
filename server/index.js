@@ -14,18 +14,24 @@ const en1 = new SoftPWM('GPIO20');
 const en2 = new Gpio(21, {mode:Gpio.OUTPUT});//SERVO
 //list 700 midle 1200 most 1600
 let pulseWithmidle = 1200
+//舵机中值，根据舵机安装情况，该值需要适当调整
 let increment =100
 en2.servoWrite(pulseWithmidle)
+//舵机初始化角度设置
 // const in1 = new Gpio(17, 'out');//in1
 // const in2 = new Gpio(4, 'out');//in2
 // const in3 = new Gpio(16, 'out');//led
 const in1 = new Gpio(17, {mode:Gpio.OUTPUT});//in1
 const in2 = new Gpio(4, {mode:Gpio.OUTPUT});//in2
+//电机驱动板两个控制接口，顺序也可以根据电机安装情况调整
 const in3 = new Gpio(16, {mode:Gpio.OUTPUT});//led
+//车灯
 let ledstate = true//熄灭
 let xangle=128
 let yangle=128
+//油门和方向盘是模拟量，128为中值范围是0-255
 let initspeed=0.5
+//初始化电机速度，该值可用于换挡
 // const in4 = new Gpio(18, 'out');//in4
 
 //init speed
@@ -43,6 +49,7 @@ var mqtt=require('mqtt')
 
 // const MIDDLEWARES = ['database', 'general', 'router', 'parcel']
 const iccidlocal = path.resolve(__dirname, '../', 'config/iccidlocal.txt')
+//读取物联网卡号，需根据各自的卡号设置，这样才能正常接发mqtt协议
 var iccid=fs.readFileSync(iccidlocal)
 var iccidstr=iccid.toString()
 iccidstr=iccidstr.replace(/[\r\n]/g,"")
@@ -136,6 +143,7 @@ initspeed=0.5
 if(message.toString()=='halfhalf'){
 initspeed=0.25
 }
+//设置速度，将方向盘上几个按键设为换挡键，
   //开关灯
   if(message.toString()=='start'){
     // in3.writeSync(1)
@@ -153,18 +161,18 @@ if(message.toString()=='one'||message.toString()=='half'||message.toString()=='h
   if(!!JSON.parse(message.toString())?.x){
     //
     if(xangle-JSON.parse(message.toString()).x>0){
-      //turn left
+      //turn left左转
       console.log('turn left-->>',xangle-JSON.parse(message.toString()).x)
       console.log('turn left-->>',xangle-JSON.parse(message.toString()).x)
       en2.servoWrite(parseInt(pulseWithmidle+(xangle-JSON.parse(message.toString()).x)*3.125))
     }
     if(JSON.parse(message.toString()).x-xangle>0){
-      //turn left
+      //turn right右转
       console.log('turn right-->>',JSON.parse(message.toString()).x-xangle)
       en2.servoWrite(parseInt(pulseWithmidle-(JSON.parse(message.toString()).x-xangle)*3.125))
     }
     if(JSON.parse(message.toString()).x-xangle==0){
-      //turn left
+      
       console.log('midllle-->>',JSON.parse(message.toString()).x-xangle)
       en2.servoWrite(pulseWithmidle)
     }
@@ -179,7 +187,7 @@ if(message.toString()=='one'||message.toString()=='half'||message.toString()=='h
       return
     }
     if(JSON.parse(message.toString()).y-yangle>0){
-      //turn left
+      //油门
       en1.write((JSON.parse(message.toString()).y-yangle)*initspeed/128)
       // in1.writeSync(0)
       // in2.writeSync(1)
@@ -189,7 +197,7 @@ if(message.toString()=='one'||message.toString()=='half'||message.toString()=='h
       return
     }
     if(JSON.parse(message.toString()).y-yangle==0){
-      //turn left
+      //停止
       // in1.writeSync(1)
       // in2.writeSync(1)
       in1.digitalWrite(1)
@@ -215,5 +223,6 @@ client.on('close', function () {
   in1.digitalWrite(1)
   in2.digitalWrite(1)
   in3.digitalWrite(0)
+  //丢失连接后制动
   client.publish(`/g500_${iccidstr}`,'Disconnected--失去连接')
 })
